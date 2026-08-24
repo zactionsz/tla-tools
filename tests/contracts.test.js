@@ -33,10 +33,17 @@ test('builds the canonical immutable asset URL', () => {
   )
 })
 
-test('uses a versioned and architecture-specific tool cache path', () => {
+test('uses a digest-keyed, versioned, and architecture-specific cache path', () => {
   assert.equal(
-    installPath('/cache', VERSION, 'arm64'),
-    path.resolve('/cache', 'tla-tools', VERSION, 'arm64', 'tla2tools.jar')
+    installPath('/cache', VERSION, SHA256.toLowerCase(), 'arm64'),
+    path.resolve(
+      '/cache',
+      'tla-tools',
+      VERSION,
+      'arm64',
+      SHA256.toLowerCase(),
+      'tla2tools.jar'
+    )
   )
 })
 

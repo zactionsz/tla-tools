@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   setup-contract:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} / Java ${{ matrix.java }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -21,6 +21,9 @@ jobs:
           - ubuntu-latest
           - macos-latest
           - windows-latest
+        java:
+          - "11"
+          - "21"
     env:
       CLASSPATH: setup-contract-sentinel
       EXPECTED_VERSION: 2026.08.11.125311
@@ -34,7 +37,7 @@ jobs:
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ matrix.java }}
 
       - name: Run unit tests
         run: npm run check

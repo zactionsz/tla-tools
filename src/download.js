@@ -47,20 +47,10 @@ async function download(url, destination, fetchImpl = fetch) {
       limit,
       createWriteStream(temporary, { flags: 'wx' })
     )
-    await replaceFile(temporary, destination)
+    await rename(temporary, destination)
   } catch (error) {
     await rm(temporary, { force: true })
     throw error
-  }
-}
-
-async function replaceFile(source, destination) {
-  try {
-    await rename(source, destination)
-  } catch (error) {
-    if (error.code !== 'EEXIST' && error.code !== 'EPERM') throw error
-    await rm(destination, { force: true })
-    await rename(source, destination)
   }
 }
 

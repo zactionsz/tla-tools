@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "check": "npm run lint && npm test",
-    "lint": "node --check src/action.js && node --check src/contracts.js && node --check src/download.js && node --check src/github.js && node --check src/index.js && node --check src/tlc.js && node --check tests/setup-contract.js",
+    "lint": "node --check src/action.js && node --check src/contracts.js && node --check src/download.js && node --check src/github.js && node --check src/index.js && node --check src/tlc.js && node --check tests/action.test.js && node --check tests/setup-contract.js",
     "test": "node --test"
   },
   "engines": {

@@ -33,8 +33,15 @@ function releaseUrl(version) {
   return `${RELEASE_BASE_URL}/tla2tools-${version}/tla2tools.jar`
 }
 
-function installPath(toolCache, version, architecture = process.arch) {
-  return path.resolve(toolCache, 'tla-tools', version, architecture, 'tla2tools.jar')
+function installPath(toolCache, version, sha256, architecture = process.arch) {
+  return path.resolve(
+    toolCache,
+    'tla-tools',
+    version,
+    architecture,
+    sha256,
+    'tla2tools.jar'
+  )
 }
 
 function javaCommand(jarPath, platform = process.platform) {

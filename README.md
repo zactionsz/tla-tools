@@ -29,10 +29,10 @@ It also provides these outputs:
 | `sha256` | Verified lowercase SHA-256 digest |
 | `java-command` | Shell-ready `java -cp "..." tlc2.TLC` command prefix |
 
-A JDK providing `java` and `jar` must already be available on `PATH`. The
-action verifies the exact release download, its SHA-256, the expected TLC
-classes inside the JAR, and the build identity that TLC reports before it
-exports anything.
+A Java 11 or newer JDK providing `java` and `jar` must already be available on
+`PATH`. The action verifies the exact release download, its SHA-256, the
+expected TLC classes inside the JAR, and the build identity that TLC reports
+before it exports anything.
 
 ## Why this exists
 
