@@ -1,7 +1,8 @@
 'use strict'
 
 const { randomUUID } = require('node:crypto')
-const { access, mkdir, rename, rm } = require('node:fs/promises')
+const { constants } = require('node:fs')
+const { access, copyFile, mkdir, rename, rm } = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const {
@@ -75,20 +76,34 @@ function verifyTlc(jarPath, version, dependencies) {
 
 async function publishVerified(source, destination, expectedSha256, digestFile) {
   await mkdir(path.dirname(destination), { recursive: true })
+  const cacheStagingPath = `${destination}.${randomUUID()}.tmp`
   try {
-    await rename(source, destination)
-    return
-  } catch (error) {
-    if (!['EACCES', 'EEXIST', 'ENOTEMPTY', 'EPERM'].includes(error.code)) throw error
+    await copyFile(source, cacheStagingPath, constants.COPYFILE_EXCL)
+    const copiedDigest = await digestFile(cacheStagingPath)
+    if (copiedDigest !== expectedSha256) {
+      throw new Error(
+        `SHA-256 mismatch while staging the verified cache entry: expected ` +
+          `${expectedSha256}, received ${copiedDigest}`
+      )
+    }
+
+    try {
+      await rename(cacheStagingPath, destination)
+      return
+    } catch (error) {
+      if (!['EACCES', 'EEXIST', 'ENOTEMPTY', 'EPERM'].includes(error.code)) throw error
+    }
+
+    const existingDigest = await digestIfPresent(destination, digestFile)
+    if (existingDigest === expectedSha256) return
+
+    // Windows cannot atomically replace an existing file with rename. At this
+    // point the same-volume replacement has passed every verification gate.
+    await rm(destination, { force: true })
+    await rename(cacheStagingPath, destination)
+  } finally {
+    await rm(cacheStagingPath, { force: true })
   }
-
-  const existingDigest = await digestIfPresent(destination, digestFile)
-  if (existingDigest === expectedSha256) return
-
-  // Windows cannot atomically replace an existing file with rename. At this
-  // point the staged replacement has already passed every verification gate.
-  await rm(destination, { force: true })
-  await rename(source, destination)
 }
 
 async function digestIfPresent(file, digestFile) {
