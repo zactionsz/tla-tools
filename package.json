@@ -1,0 +1,15 @@
+{
+  "name": "tla-tools-action",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub Action for installing immutable TLA+ tools releases",
+  "license": "MIT",
+  "scripts": {
+    "check": "npm run lint && npm test",
+    "lint": "node --check src/action.js && node --check src/contracts.js && node --check src/download.js && node --check src/github.js && node --check src/index.js && node --check src/tlc.js && node --check tests/setup-contract.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

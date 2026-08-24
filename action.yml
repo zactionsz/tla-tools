@@ -1,0 +1,29 @@
+name: Install TLA+ tools
+description: Install an immutable, SHA-256-pinned tla2tools.jar release
+author: zactionsz
+
+inputs:
+  version:
+    description: TLC build identity and immutable release version
+    required: true
+  sha256:
+    description: Expected SHA-256 digest of tla2tools.jar
+    required: true
+
+outputs:
+  version:
+    description: Verified TLC build identity
+  jar-path:
+    description: Absolute path to the verified tla2tools.jar
+  sha256:
+    description: Verified lowercase SHA-256 digest
+  java-command:
+    description: Shell-ready command prefix for running TLC
+
+runs:
+  using: node24
+  main: src/index.js
+
+branding:
+  icon: check-circle
+  color: blue

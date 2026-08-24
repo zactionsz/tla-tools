@@ -1,0 +1,55 @@
+name: Setup contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  setup-contract:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    env:
+      CLASSPATH: setup-contract-sentinel
+      EXPECTED_VERSION: 2026.08.11.125311
+      EXPECTED_SHA256: ab323b79802aedc3203b3f9af37c6aca3ed43f4e0225b36f2aa77b26de46c05f
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run unit tests
+        run: npm run check
+
+      - name: Install TLA+ tools
+        id: tla-tools
+        uses: ./
+        with:
+          version: ${{ env.EXPECTED_VERSION }}
+          sha256: ${{ env.EXPECTED_SHA256 }}
+
+      - name: Verify setup contract
+        run: node tests/setup-contract.js
+        env:
+          ACTION_VERSION: ${{ steps.tla-tools.outputs.version }}
+          ACTION_JAR_PATH: ${{ steps.tla-tools.outputs.jar-path }}
+          ACTION_SHA256: ${{ steps.tla-tools.outputs.sha256 }}
+          ACTION_JAVA_COMMAND: ${{ steps.tla-tools.outputs.java-command }}
