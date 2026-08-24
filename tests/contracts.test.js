@@ -9,7 +9,7 @@ const {
   releaseUrl,
   requireSha256,
   requireVersion
-} = require('../src/contracts')
+} = require('../dist/contracts')
 
 const VERSION = '2026.08.11.125311'
 const SHA256 = 'AB323B79802AEDC3203B3F9AF37C6ACA3ED43F4E0225B36F2AA77B26DE46C05F'

@@ -51,6 +51,20 @@ and their associated tags cannot be changed after publication.
 - The consumer verifies SHA-256 against its own pinned digest before use;
   this mirror is a distribution point, not a trust root.
 
+## Development
+
+The action is authored in strict TypeScript under `src/`. GitHub Actions runs
+the committed CommonJS output under `dist/`, and the tests exercise that
+compiled artifact directly.
+
+```shell
+npm ci
+npm run check
+```
+
+The check builds the action, validates the generated JavaScript, runs the unit
+tests, and fails if the committed `dist/` output is stale.
+
 ## Provenance
 
 `tla2tools-2026.08.11.125311` was downloaded from upstream release asset

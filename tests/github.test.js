@@ -5,7 +5,7 @@ const { mkdtemp, readFile, rm, writeFile } = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { test } = require('node:test')
-const { exportVariable, input, setOutput } = require('../src/github')
+const { exportVariable, input, setOutput } = require('../dist/github')
 
 test('reads required inputs and writes only explicit command-file values', async (context) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'tla-tools-github-'))

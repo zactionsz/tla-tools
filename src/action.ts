@@ -1,24 +1,38 @@
-'use strict'
-
-const { randomUUID } = require('node:crypto')
-const { constants } = require('node:fs')
-const { access, copyFile, mkdir, rename, rm } = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const {
+import { randomUUID } from 'node:crypto'
+import { constants } from 'node:fs'
+import { access, copyFile, mkdir, rename, rm } from 'node:fs/promises'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import {
   EXPECTED_JAR_ENTRIES,
   installPath,
   javaCommand,
   releaseUrl,
   requireSha256,
   requireVersion
-} = require('./contracts')
-const { download } = require('./download')
-const github = require('./github')
-const { sha256File, verifyBuildIdentity, verifyJarEntries } = require('./tlc')
+} from './contracts'
+import { download } from './download'
+import * as github from './github'
+import { sha256File, verifyBuildIdentity, verifyJarEntries } from './tlc'
 
-async function runAction(environment = process.env, overrides = {}) {
-  const dependencies = {
+interface Dependencies {
+  download: typeof download
+  sha256File: typeof sha256File
+  verifyBuildIdentity: typeof verifyBuildIdentity
+  verifyJarEntries: typeof verifyJarEntries
+}
+
+export interface ActionResult {
+  jarPath: string
+  sha256: string
+  version: string
+}
+
+export async function runAction(
+  environment: NodeJS.ProcessEnv = process.env,
+  overrides: Partial<Dependencies> = {}
+): Promise<ActionResult> {
+  const dependencies: Dependencies = {
     download,
     sha256File,
     verifyBuildIdentity,
@@ -32,8 +46,10 @@ async function runAction(environment = process.env, overrides = {}) {
   const jarPath = installPath(toolCache, version, expectedSha256)
   const url = releaseUrl(version)
 
-  let actualSha256 = await digestIfPresent(jarPath, dependencies.sha256File)
-  if (actualSha256 === expectedSha256) {
+  const cachedSha256 = await digestIfPresent(jarPath, dependencies.sha256File)
+  let actualSha256: string
+  if (cachedSha256 === expectedSha256) {
+    actualSha256 = cachedSha256
     github.info(`Using verified cached TLA+ tools ${version}`)
     verifyTlc(jarPath, version, dependencies)
   } else {
@@ -69,12 +85,19 @@ async function runAction(environment = process.env, overrides = {}) {
   return { jarPath, sha256: actualSha256, version }
 }
 
-function verifyTlc(jarPath, version, dependencies) {
+function verifyTlc(jarPath: string, version: string, dependencies: Dependencies): void {
   dependencies.verifyJarEntries(jarPath, EXPECTED_JAR_ENTRIES)
   dependencies.verifyBuildIdentity(jarPath, version)
 }
 
-async function publishVerified(source, destination, expectedSha256, digestFile) {
+type DigestFile = (file: string) => Promise<string>
+
+export async function publishVerified(
+  source: string,
+  destination: string,
+  expectedSha256: string,
+  digestFile: DigestFile
+): Promise<void> {
   await mkdir(path.dirname(destination), { recursive: true })
   const cacheStagingPath = `${destination}.${randomUUID()}.tmp`
   try {
@@ -91,7 +114,12 @@ async function publishVerified(source, destination, expectedSha256, digestFile) 
       await rename(cacheStagingPath, destination)
       return
     } catch (error) {
-      if (!['EACCES', 'EEXIST', 'ENOTEMPTY', 'EPERM'].includes(error.code)) throw error
+      if (
+        !isNodeError(error) ||
+        !['EACCES', 'EEXIST', 'ENOTEMPTY', 'EPERM'].includes(error.code ?? '')
+      ) {
+        throw error
+      }
     }
 
     const existingDigest = await digestIfPresent(destination, digestFile)
@@ -106,14 +134,19 @@ async function publishVerified(source, destination, expectedSha256, digestFile) 
   }
 }
 
-async function digestIfPresent(file, digestFile) {
+async function digestIfPresent(
+  file: string,
+  digestFile: DigestFile
+): Promise<string | undefined> {
   try {
     await access(file)
     return await digestFile(file)
   } catch (error) {
-    if (error.code === 'ENOENT') return undefined
+    if (isNodeError(error) && error.code === 'ENOENT') return undefined
     throw error
   }
 }
 
-module.exports = { publishVerified, runAction }
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error
+}

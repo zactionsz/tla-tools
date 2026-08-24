@@ -39,6 +39,9 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
 
+      - name: Install development dependencies
+        run: npm ci
+
       - name: Run unit tests
         run: npm run check
 

@@ -5,7 +5,7 @@ const { mkdtemp, readFile, rm } = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { test } = require('node:test')
-const { download } = require('../src/download')
+const { download } = require('../dist/download')
 
 test('downloads bytes atomically', async (context) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'tla-tools-download-'))

@@ -5,11 +5,17 @@
   "description": "GitHub Action for installing immutable TLA+ tools releases",
   "license": "MIT",
   "scripts": {
-    "check": "npm run lint && npm test",
-    "lint": "node --check src/action.js && node --check src/contracts.js && node --check src/download.js && node --check src/github.js && node --check src/index.js && node --check src/tlc.js && node --check tests/action.test.js && node --check tests/setup-contract.js",
+    "build": "tsc -p tsconfig.json",
+    "check": "npm run build && npm run lint && npm test && npm run check:dist",
+    "check:dist": "git diff --exit-code -- dist",
+    "lint": "node --check dist/action.js && node --check dist/contracts.js && node --check dist/download.js && node --check dist/github.js && node --check dist/index.js && node --check dist/tlc.js && node --check tests/action.test.js && node --check tests/setup-contract.js",
     "test": "node --test"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "7.0.2"
   }
 }

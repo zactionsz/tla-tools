@@ -1,23 +1,34 @@
-'use strict'
+import { appendFileSync } from 'node:fs'
+import { EOL } from 'node:os'
 
-const { appendFileSync } = require('node:fs')
-const { EOL } = require('node:os')
-
-function input(name, environment = process.env) {
+export function input(name: string, environment: NodeJS.ProcessEnv = process.env): string {
   const value = environment[`INPUT_${name.replaceAll('-', '_').toUpperCase()}`]
   if (!value || !value.trim()) throw new Error(`Input ${name} is required`)
   return value
 }
 
-function setOutput(name, value, environment = process.env) {
+export function setOutput(
+  name: string,
+  value: unknown,
+  environment: NodeJS.ProcessEnv = process.env
+): void {
   appendCommand(environment.GITHUB_OUTPUT, name, value, 'output')
 }
 
-function exportVariable(name, value, environment = process.env) {
+export function exportVariable(
+  name: string,
+  value: unknown,
+  environment: NodeJS.ProcessEnv = process.env
+): void {
   appendCommand(environment.GITHUB_ENV, name, value, 'environment')
 }
 
-function appendCommand(file, name, value, kind) {
+function appendCommand(
+  file: string | undefined,
+  name: string,
+  value: unknown,
+  kind: 'environment' | 'output'
+): void {
   if (!file) throw new Error(`GITHUB_${kind === 'output' ? 'OUTPUT' : 'ENV'} is not set`)
   const rendered = String(value)
   if (/[\r\n]/u.test(name) || /[\r\n]/u.test(rendered)) {
@@ -26,21 +37,19 @@ function appendCommand(file, name, value, kind) {
   appendFileSync(file, `${name}=${rendered}${EOL}`, { encoding: 'utf8' })
 }
 
-function info(message) {
+export function info(message: string): void {
   process.stdout.write(`${message}${EOL}`)
 }
 
-function setFailed(error) {
+export function setFailed(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error)
   process.stderr.write(`::error::${escapeWorkflowCommand(message)}${EOL}`)
   process.exitCode = 1
 }
 
-function escapeWorkflowCommand(message) {
+function escapeWorkflowCommand(message: string): string {
   return message
     .replaceAll('%', '%25')
     .replaceAll('\r', '%0D')
     .replaceAll('\n', '%0A')
 }
-
-module.exports = { exportVariable, info, input, setFailed, setOutput }

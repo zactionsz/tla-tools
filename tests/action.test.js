@@ -6,8 +6,8 @@ const { mkdir, mkdtemp, readFile, rm, writeFile } = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { test } = require('node:test')
-const { runAction } = require('../src/action')
-const { installPath } = require('../src/contracts')
+const { runAction } = require('../dist/action')
+const { installPath } = require('../dist/contracts')
 
 const VERSION = '2026.08.11.125311'
 

@@ -1,16 +1,14 @@
-'use strict'
+import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 
-const { spawnSync } = require('node:child_process')
-const { createHash } = require('node:crypto')
-const { createReadStream } = require('node:fs')
-
-async function sha256File(file) {
+export async function sha256File(file: string): Promise<string> {
   const hash = createHash('sha256')
   for await (const chunk of createReadStream(file)) hash.update(chunk)
   return hash.digest('hex')
 }
 
-function verifyJarEntries(jarPath, expectedEntries) {
+export function verifyJarEntries(jarPath: string, expectedEntries: readonly string[]): void {
   const result = run('jar', ['tf', jarPath])
   const entries = new Set(result.output.split(/\r?\n/u))
   const missing = expectedEntries.filter((entry) => !entries.has(entry))
@@ -19,7 +17,7 @@ function verifyJarEntries(jarPath, expectedEntries) {
   }
 }
 
-function verifyBuildIdentity(jarPath, version) {
+export function verifyBuildIdentity(jarPath: string, version: string): void {
   // TLC currently returns 1 after printing valid help, so identity is the
   // success signal for this probe rather than the help command's exit code.
   const result = run('java', ['-cp', jarPath, 'tlc2.TLC', '-h'], [0, 1])
@@ -29,7 +27,11 @@ function verifyBuildIdentity(jarPath, version) {
   }
 }
 
-function run(command, args, acceptedStatuses = [0]) {
+function run(
+  command: string,
+  args: string[],
+  acceptedStatuses: readonly number[] = [0]
+): { output: string } {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
     maxBuffer: 16 * 1024 * 1024,
@@ -39,10 +41,8 @@ function run(command, args, acceptedStatuses = [0]) {
     throw new Error(`Unable to run ${command}: ${result.error.message}`)
   }
   const output = `${result.stdout || ''}${result.stderr || ''}`
-  if (!acceptedStatuses.includes(result.status)) {
+  if (result.status === null || !acceptedStatuses.includes(result.status)) {
     throw new Error(`${command} exited with status ${result.status}: ${output.trim()}`)
   }
   return { output }
 }
-
-module.exports = { sha256File, verifyBuildIdentity, verifyJarEntries }

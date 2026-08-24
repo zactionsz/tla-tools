@@ -1,17 +1,16 @@
-'use strict'
-
-const path = require('node:path')
+import * as path from 'node:path'
 
 const RELEASE_BASE_URL = 'https://github.com/zactionsz/tla-tools/releases/download'
 const VERSION_PATTERN = /^\d{4}\.\d{2}\.\d{2}\.\d{6}$/
 const SHA256_PATTERN = /^[a-fA-F0-9]{64}$/
-const EXPECTED_JAR_ENTRIES = Object.freeze([
+
+export const EXPECTED_JAR_ENTRIES = Object.freeze([
   'tlc2/TLC.class',
   'tlc2/tool/ModelChecker.class',
   'tlc2/tool/distributed/TLCServer.class'
 ])
 
-function requireVersion(value) {
+export function requireVersion(value: string): string {
   const version = value.trim()
   if (!VERSION_PATTERN.test(version)) {
     throw new Error(
@@ -21,7 +20,7 @@ function requireVersion(value) {
   return version
 }
 
-function requireSha256(value) {
+export function requireSha256(value: string): string {
   const sha256 = value.trim()
   if (!SHA256_PATTERN.test(sha256)) {
     throw new Error('Invalid sha256; expected exactly 64 hexadecimal characters')
@@ -29,11 +28,16 @@ function requireSha256(value) {
   return sha256.toLowerCase()
 }
 
-function releaseUrl(version) {
+export function releaseUrl(version: string): string {
   return `${RELEASE_BASE_URL}/tla2tools-${version}/tla2tools.jar`
 }
 
-function installPath(toolCache, version, sha256, architecture = process.arch) {
+export function installPath(
+  toolCache: string,
+  version: string,
+  sha256: string,
+  architecture = process.arch
+): string {
   return path.resolve(
     toolCache,
     'tla-tools',
@@ -44,11 +48,14 @@ function installPath(toolCache, version, sha256, architecture = process.arch) {
   )
 }
 
-function javaCommand(jarPath, platform = process.platform) {
+export function javaCommand(
+  jarPath: string,
+  platform: NodeJS.Platform = process.platform
+): string {
   return `java -cp ${quoteArgument(jarPath, platform)} tlc2.TLC`
 }
 
-function quoteArgument(value, platform) {
+function quoteArgument(value: string, platform: NodeJS.Platform): string {
   if (/[\r\n]/u.test(value)) {
     throw new Error('Command arguments cannot contain newlines')
   }
@@ -56,13 +63,4 @@ function quoteArgument(value, platform) {
     return `"${value.replaceAll('"', '""')}"`
   }
   return `"${value.replace(/["\\$`]/gu, '\\$&')}"`
-}
-
-module.exports = {
-  EXPECTED_JAR_ENTRIES,
-  installPath,
-  javaCommand,
-  releaseUrl,
-  requireSha256,
-  requireVersion
 }
